@@ -1,3 +1,4 @@
+local M = {}
 local runnerFile = ""
 local keys = {}
 
@@ -37,4 +38,8 @@ function setup_autocmds()
 	})
 end
 
-setup_autocmds()
+function M.setup()
+	setup_autocmds()
+end
+
+return M
