@@ -72,12 +72,21 @@ local function setup_commands()
 			return
 		end
 
+		-- Open a new buffer in a split (optional)
+		vim.cmd("new") -- or "vnew" for vertical split, or just use current window
+
+		-- Get the current buffer (this will be replaced by term buffer)
+		local buf = vim.api.nvim_get_current_buf()
+
+		-- Start the terminal in this buffer (termopen creates the terminal buffer)
 		vim.fn.termopen(cmd)
 
-		vim.cmd("startinsert")
+		-- Rename the buffer after the mode
+		local term_buf = vim.api.nvim_get_current_buf()
+		vim.api.nvim_buf_set_name(term_buf, "Runner: " .. mode)
 
-		-- Optional: name buffer after mode
-		vim.api.nvim_buf_set_name(buf, "Runner: " .. mode)
+		-- Enter insert mode for interactive terminal
+		vim.cmd("startinsert")
 	end, {
 		nargs = 1,
 		complete = function()
