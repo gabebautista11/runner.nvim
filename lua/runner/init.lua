@@ -31,6 +31,7 @@ end
 function setup_autocmds()
 	vim.api.nvim_create_autocmd("CmdlineEnter", {
 		callback = function()
+			print("Opened Cmd Line")
 			runnerFile = ReadJsonRunnerFile()
 			keys = GetKeys()
 		end,
