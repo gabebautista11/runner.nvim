@@ -76,16 +76,17 @@ local function setup_commands()
 		-- Open a new tab
 		vim.cmd("tabnew")
 
-		-- Get the current buffer in the new tab
+		-- Get the current buffer (the tab has its own buffer now)
 		local term_buf = vim.api.nvim_get_current_buf()
 
-		-- Start terminal in this buffer, using the cwd of the runner.json file
+		-- Start the terminal in this buffer
+		-- Important: do NOT call vim.cmd("new") or create a buffer manually
 		vim.fn.termopen(data.cmd, { cwd = data.cwd })
 
-		-- Rename buffer for clarity
+		-- Rename the buffer for clarity
 		vim.api.nvim_buf_set_name(term_buf, "Runner: " .. mode)
 
-		-- Enter insert mode automatically
+		-- Enter insert mode for interactivity
 		vim.cmd("startinsert")
 	end, {
 		nargs = 1,
