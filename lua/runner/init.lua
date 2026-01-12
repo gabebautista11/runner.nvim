@@ -73,24 +73,20 @@ local function setup_commands()
 			return
 		end
 
-		-- Save current window
-		local cur_win = vim.api.nvim_get_current_win()
+		-- Open a new tab
+		vim.cmd("tabnew")
 
-		-- Open a new buffer in a split for the terminal
-		vim.cmd("new")
+		-- Get the current buffer in the new tab
 		local term_buf = vim.api.nvim_get_current_buf()
 
 		-- Start terminal in this buffer, using the cwd of the runner.json file
 		vim.fn.termopen(data.cmd, { cwd = data.cwd })
 
-		-- Rename buffer after mode
+		-- Rename buffer for clarity
 		vim.api.nvim_buf_set_name(term_buf, "Runner: " .. mode)
 
-		-- Enter insert mode for interactivity
+		-- Enter insert mode automatically
 		vim.cmd("startinsert")
-
-		-- Optional: return focus to original window
-		vim.api.nvim_set_current_win(cur_win)
 	end, {
 		nargs = 1,
 		complete = function()
