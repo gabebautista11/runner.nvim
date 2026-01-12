@@ -72,21 +72,27 @@ local function setup_commands()
 			return
 		end
 
-		-- Open a new buffer in a split (optional)
-		vim.cmd("new") -- or "vnew" for vertical split, or just use current window
+		-- Save the current window so we can go back
+		local cur_win = vim.api.nvim_get_current_win()
 
-		-- Get the current buffer (this will be replaced by term buffer)
-		local buf = vim.api.nvim_get_current_buf()
+		-- Open a new horizontal split (or vnew for vertical)
+		vim.cmd("new")
 
-		-- Start the terminal in this buffer (termopen creates the terminal buffer)
+		-- Get the new window and buffer
+		local term_win = vim.api.nvim_get_current_win()
+		local term_buf = vim.api.nvim_get_current_buf()
+
+		-- Start the terminal in this buffer
 		vim.fn.termopen(cmd)
 
-		-- Rename the buffer after the mode
-		local term_buf = vim.api.nvim_get_current_buf()
+		-- Rename the buffer for clarity
 		vim.api.nvim_buf_set_name(term_buf, "Runner: " .. mode)
 
-		-- Enter insert mode for interactive terminal
+		-- Go into insert mode automatically
 		vim.cmd("startinsert")
+
+		-- OPTIONAL: return focus to original window
+		vim.api.nvim_set_current_win(cur_win)
 	end, {
 		nargs = 1,
 		complete = function()
