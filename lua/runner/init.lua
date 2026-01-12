@@ -72,16 +72,12 @@ local function setup_commands()
 			return
 		end
 
-		-- Create a new listed buffer
-		local buf = vim.api.nvim_create_buf(true, false) -- listed=true, scratch=false
+		local buf = vim.api.nvim_create_buf(true, false)
 
-		-- Open it in the current window
-		vim.api.nvim_win_set_buf(0, buf)
+		vim.api.nvim_set_current_buf(buf)
 
-		-- Start terminal in this buffer
 		vim.fn.termopen(cmd)
 
-		-- Enter insert mode to interact
 		vim.cmd("startinsert")
 
 		-- Optional: name buffer after mode
