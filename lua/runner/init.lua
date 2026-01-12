@@ -19,7 +19,6 @@ end
 -- Load & merge JSON files into one config table
 -----------------------------------------------------------
 local function load_and_merge_runner_files()
-	local json = require("json")
 	local result = {}
 
 	for _, path in ipairs(find_all_runner_files()) do
@@ -27,8 +26,7 @@ local function load_and_merge_runner_files()
 		if file then
 			local raw = file:read("*a")
 			file:close()
-			local ok, obj = pcall(json.decode, raw)
-
+			local ok, obj = pcall(vim.fn.json_decode, raw)
 			if ok and type(obj) == "table" then
 				for k, v in pairs(obj) do
 					if result[k] then
