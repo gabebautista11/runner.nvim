@@ -4,7 +4,9 @@ local M = {}
 local keys = {}
 local merged = {}
 
--- Read all runner.json paths recursively from cwd
+-----------------------------------------------------------
+-- Find all runner.json files recursively from cwd
+-----------------------------------------------------------
 local function find_all_runner_files()
 	return vim.fs.find("runner.json", {
 		type = "file",
@@ -13,63 +15,55 @@ local function find_all_runner_files()
 	})
 end
 
--- Load & merge all JSON files into one table
+-----------------------------------------------------------
+-- Load & merge JSON files into one config table
+-----------------------------------------------------------
 local function load_and_merge_runner_files()
 	local json = require("json")
 	local result = {}
 
 	for _, path in ipairs(find_all_runner_files()) do
 		local file = io.open(path, "r")
-		if not file then
-			vim.notify("Failed to open " .. path, vim.log.levels.ERROR)
-		else
+		if file then
 			local raw = file:read("*a")
 			file:close()
-
 			local ok, obj = pcall(json.decode, raw)
-			if not ok then
-				vim.notify("JSON decode failed in " .. path, vim.log.levels.ERROR)
-			elseif type(obj) == "table" then
+
+			if ok and type(obj) == "table" then
 				for k, v in pairs(obj) do
 					if result[k] then
 						vim.notify(("Duplicate key '%s' overridden from %s"):format(k, path), vim.log.levels.WARN)
 					end
 					result[k] = v
 				end
+			else
+				vim.notify("JSON decode failed in " .. path, vim.log.levels.ERROR)
 			end
+		else
+			vim.notify("Failed to open " .. path, vim.log.levels.ERROR)
 		end
 	end
 
 	return result
 end
 
--- Refresh data + keys list
+-----------------------------------------------------------
+-- Rebuild merged + keys list
+-----------------------------------------------------------
 local function refresh_runner_data()
 	merged = load_and_merge_runner_files()
 	keys = {}
 
 	for k, _ in pairs(merged) do
-		table.insert(keys, k)
+		keys[#keys + 1] = k -- packed array
 	end
 
-	vim.notify("runner.json reloaded (" .. #keys .. " modes found)")
+	vim.notify("runner.json loaded (" .. #keys .. " keys)", vim.log.levels.INFO)
 end
 
--- Public command (optional)
-
--- Autocmd reload on write
-local function setup_autocmds()
-	vim.api.nvim_create_autocmd("BufWritePost", {
-		pattern = "**/runner.json",
-		callback = refresh_runner_data,
-	})
-
-	-- load immediately on startup
-	vim.api.nvim_create_autocmd("VimEnter", {
-		callback = refresh_runner_data,
-	})
-end
-
+-----------------------------------------------------------
+-- :Run command with completion
+-----------------------------------------------------------
 local function setup_commands()
 	vim.api.nvim_create_user_command("Run", function(opts)
 		local mode = opts.args
@@ -85,14 +79,43 @@ local function setup_commands()
 	end, {
 		nargs = 1,
 		complete = function()
-			return keys
-		end, -- Auto-complete JSON keys 🎉
+			local items = {}
+			for _, key in ipairs(keys) do
+				items[#items + 1] = key
+			end
+			return items
+		end,
 	})
 end
 
+-----------------------------------------------------------
+-- Auto-load when Neovim starts + reload on runner.json write
+-----------------------------------------------------------
+local function setup_autocmds()
+	vim.api.nvim_create_autocmd("BufWritePost", {
+		pattern = "**/runner.json",
+		callback = refresh_runner_data,
+	})
+
+	vim.api.nvim_create_autocmd("VimEnter", {
+		callback = refresh_runner_data,
+	})
+end
+
+-----------------------------------------------------------
+-- Public setup
+-----------------------------------------------------------
 function M.setup()
 	setup_autocmds()
 	setup_commands()
+	refresh_runner_data() -- ensure keys exist if VimEnter missed
+end
+
+-----------------------------------------------------------
+-- Optional debugging accessor
+-----------------------------------------------------------
+function M.debug_keys()
+	return keys
 end
 
 return M
