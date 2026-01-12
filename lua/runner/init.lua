@@ -72,10 +72,6 @@ local function setup_commands()
 			return
 		end
 
-		local buf = vim.api.nvim_create_buf(true, false)
-
-		vim.api.nvim_set_current_buf(buf)
-
 		vim.fn.termopen(cmd)
 
 		vim.cmd("startinsert")
