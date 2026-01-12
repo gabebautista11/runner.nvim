@@ -36,3 +36,5 @@ function setup_autocmds()
 		end,
 	})
 end
+
+setup_autocmds()
