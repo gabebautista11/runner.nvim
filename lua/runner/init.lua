@@ -16,7 +16,8 @@ local function find_all_runner_files()
 end
 
 -----------------------------------------------------------
--- Load & merge JSON files into one config table
+-- Load & merge JSON files into one table
+-- Each entry stores both the command and the path of its runner.json
 -----------------------------------------------------------
 local function load_and_merge_runner_files()
 	local result = {}
@@ -32,7 +33,7 @@ local function load_and_merge_runner_files()
 					if result[k] then
 						vim.notify(("Duplicate key '%s' overridden from %s"):format(k, path), vim.log.levels.WARN)
 					end
-					result[k] = v
+					result[k] = { cmd = v, cwd = vim.fn.fnamemodify(path, ":h") } -- store path
 				end
 			else
 				vim.notify("JSON decode failed in " .. path, vim.log.levels.ERROR)
@@ -60,38 +61,35 @@ local function refresh_runner_data()
 end
 
 -----------------------------------------------------------
--- :Run command with completion
+-- :Run command with autocompletion
 -----------------------------------------------------------
 local function setup_commands()
 	vim.api.nvim_create_user_command("Run", function(opts)
 		local mode = opts.args
-		local cmd = merged[mode]
+		local data = merged[mode]
 
-		if not cmd then
+		if not data then
 			vim.notify("Mode '" .. mode .. "' not found", vim.log.levels.ERROR)
 			return
 		end
 
-		-- Save the current window so we can go back
+		-- Save current window
 		local cur_win = vim.api.nvim_get_current_win()
 
-		-- Open a new horizontal split (or vnew for vertical)
+		-- Open a new buffer in a split for the terminal
 		vim.cmd("new")
-
-		-- Get the new window and buffer
-		local term_win = vim.api.nvim_get_current_win()
 		local term_buf = vim.api.nvim_get_current_buf()
 
-		-- Start the terminal in this buffer
-		vim.fn.termopen(cmd)
+		-- Start terminal in this buffer, using the cwd of the runner.json file
+		vim.fn.termopen(data.cmd, { cwd = data.cwd })
 
-		-- Rename the buffer for clarity
+		-- Rename buffer after mode
 		vim.api.nvim_buf_set_name(term_buf, "Runner: " .. mode)
 
-		-- Go into insert mode automatically
+		-- Enter insert mode for interactivity
 		vim.cmd("startinsert")
 
-		-- OPTIONAL: return focus to original window
+		-- Optional: return focus to original window
 		vim.api.nvim_set_current_win(cur_win)
 	end, {
 		nargs = 1,
