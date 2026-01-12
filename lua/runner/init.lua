@@ -1,4 +1,5 @@
--- Read JSON runner.json file in current directory opened
+local runnerFile = ""
+local keys = {}
 
 function ReadJsonRunnerFile()
 	local file = io.open("runner.json", "r")
@@ -22,4 +23,16 @@ function GetKeys()
 	return jsonKeys
 end
 
-keys = GetKeys()
+function RunCommand(jsonKey)
+	local json = require("json")
+	local jsonFile = ReadJsonRunnerFile()
+end
+
+function setup_autocmds()
+	vim.api.nvim_create_autocmd("CmdlineEnter", {
+		callback = function()
+			runnerFile = ReadJsonRunnerFile()
+			keys = GetKeys()
+		end,
+	})
+end
