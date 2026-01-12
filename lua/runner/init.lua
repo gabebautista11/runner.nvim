@@ -56,27 +56,6 @@ local function refresh_runner_data()
 end
 
 -- Public command (optional)
-local function setup_commands()
-	vim.api.nvim_create_user_command("RunMode", function(opts)
-		local mode = opts.args
-		local cmd = merged[mode]
-
-		if not cmd then
-			vim.notify("Mode '" .. mode .. "' not found", vim.log.levels.ERROR)
-			return
-		end
-
-		vim.notify("Running: " .. cmd)
-
-		-- spawn in a terminal
-		vim.cmd("split | terminal " .. cmd)
-	end, {
-		nargs = 1,
-		complete = function()
-			return keys
-		end,
-	})
-end
 
 -- Autocmd reload on write
 local function setup_autocmds()
@@ -88,6 +67,26 @@ local function setup_autocmds()
 	-- load immediately on startup
 	vim.api.nvim_create_autocmd("VimEnter", {
 		callback = refresh_runner_data,
+	})
+end
+
+local function setup_commands()
+	vim.api.nvim_create_user_command("Run", function(opts)
+		local mode = opts.args
+		local cmd = merged[mode]
+
+		if not cmd then
+			vim.notify("Mode '" .. mode .. "' not found", vim.log.levels.ERROR)
+			return
+		end
+
+		vim.notify("Running: " .. cmd)
+		vim.cmd("split | terminal " .. cmd)
+	end, {
+		nargs = 1,
+		complete = function()
+			return keys
+		end, -- Auto-complete JSON keys 🎉
 	})
 end
 
