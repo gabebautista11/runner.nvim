@@ -72,8 +72,18 @@ local function setup_commands()
 			return
 		end
 
-		vim.notify("Running: " .. cmd)
-		vim.cmd("split | terminal " .. cmd)
+		-- Create a new buffer
+		local buf = vim.api.nvim_create_buf(true, false) -- listed, scratch=false
+
+		-- Open the buffer in a new tab (optional) or window
+		vim.api.nvim_command("tabnew") -- create a new tab
+		vim.api.nvim_win_set_buf(0, buf) -- set current window to new buffer
+
+		-- Start terminal in this buffer
+		vim.fn.termopen(cmd)
+
+		-- Enter insert mode to interact with terminal
+		vim.api.nvim_command("startinsert")
 	end, {
 		nargs = 1,
 		complete = function()
